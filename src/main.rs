@@ -1,6 +1,5 @@
 use std::{io, process};
 
-use backend::data::Root;
 use crossterm::event::{self, Event, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
@@ -119,6 +118,14 @@ impl App {
 }
 
 fn main() -> io::Result<()> {
+    // request for localhost:9090/proxies, and convert to backend::data::Root
+    // let response: backend::data::Root = reqwest::blocking::get("http://localhost:9090/proxies")
+    //     .unwrap()
+    //     .json()
+    //     .unwrap();
+    // println!("{:?}", response);
+    // process::exit(0);
+
     let mut terminal = ratatui::init();
     let app_result = App::new().run(&mut terminal);
 

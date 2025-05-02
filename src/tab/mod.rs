@@ -1,5 +1,7 @@
 use ratatui::widgets::{Tabs, Widget};
 
+mod card;
+
 #[derive(Debug)]
 pub struct BoardWidget {
     current_tab: usize,

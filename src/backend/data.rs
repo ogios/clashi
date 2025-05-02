@@ -18,24 +18,27 @@ pub enum ProxyEntry {
 /// A proxy group (has `all` field).
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProxyGroup {
-    pub alive: bool,
+    // in use
     pub all: Vec<String>,
+    pub history: Vec<HistoryEntry>,
+    pub name: String,
+    pub now: String,
+    #[serde(rename = "type")]
+    pub typ: ProxyType,
+
+    // not in use
+    pub alive: bool,
     #[serde(rename = "dialer-proxy")]
     pub dialer_proxy: String,
     pub extra: HashMap<String, ExtraInfo>,
     pub hidden: bool,
-    pub history: Vec<HistoryEntry>,
     pub icon: String,
     pub interface: String,
     pub mptcp: bool,
-    pub name: String,
-    pub now: String,
     #[serde(rename = "routing-mark")]
     pub routing_mark: u64,
     pub smux: bool,
     pub tfo: bool,
-    #[serde(rename = "type")]
-    pub typ: ProxyType,
     pub udp: bool,
     pub uot: bool,
     pub xudp: bool,
@@ -49,22 +52,25 @@ pub struct ProxyGroup {
 /// A single proxy (has `id` field).
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Proxy {
+    // in use
+    pub id: String,
+    pub name: String,
+    pub udp: bool,
+    pub history: Vec<HistoryEntry>,
+    #[serde(rename = "type")]
+    pub typ: ProxyType,
+
+    // not in use
     pub alive: bool,
     #[serde(rename = "dialer-proxy")]
     pub dialer_proxy: String,
     pub extra: HashMap<String, ExtraInfo>,
-    pub history: Vec<HistoryEntry>,
-    pub id: String,
     pub interface: String,
     pub mptcp: bool,
-    pub name: String,
     #[serde(rename = "routing-mark")]
     pub routing_mark: u64,
     pub smux: bool,
     pub tfo: bool,
-    #[serde(rename = "type")]
-    pub typ: ProxyType,
-    pub udp: bool,
     pub uot: bool,
     pub xudp: bool,
 }
@@ -85,14 +91,35 @@ pub struct ExtraInfo {
 
 /// Type of proxy or group, matching the `type` field.
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase")]
+// #[serde(rename_all = "PascalCase")]
 pub enum ProxyType {
-    Selector,
-    Compatible,
     Direct,
-    Pass,
     Reject,
     RejectDrop,
+    Compatible,
+    Pass,
+
+    Shadowsocks,
+    ShadowsocksR,
+    Snell,
+    Socks5,
+    Http,
+    Vmess,
+    Vless,
     Trojan,
+    Hysteria,
+    Hysteria2,
+    Tuic,
+    WireGuard,
+    Dns,
+    Ssh,
+    Mieru,
+    AnyTLS,
+
+    // group specific
+    Relay,
+    Selector,
     Fallback,
+    URLTest,
+    LoadBalance,
 }
