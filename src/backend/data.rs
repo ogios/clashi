@@ -22,31 +22,31 @@ pub struct ProxyGroup {
     pub all: Vec<String>,
     pub history: Vec<HistoryEntry>,
     pub name: String,
-    pub now: String,
+    #[serde(default)]
+    pub now: Option<String>,
     #[serde(rename = "type")]
     pub typ: ProxyType,
-
     // not in use
-    pub alive: bool,
-    #[serde(rename = "dialer-proxy")]
-    pub dialer_proxy: String,
-    pub extra: HashMap<String, ExtraInfo>,
-    pub hidden: bool,
-    pub icon: String,
-    pub interface: String,
-    pub mptcp: bool,
-    #[serde(rename = "routing-mark")]
-    pub routing_mark: u64,
-    pub smux: bool,
-    pub tfo: bool,
-    pub udp: bool,
-    pub uot: bool,
-    pub xudp: bool,
-    pub fixed: Option<String>,
-    #[serde(rename = "expectedStatus")]
-    pub expected_status: Option<String>,
-    #[serde(rename = "testUrl")]
-    pub test_url: Option<String>,
+    // pub alive: bool,
+    // #[serde(rename = "dialer-proxy")]
+    // pub dialer_proxy: String,
+    // pub extra: HashMap<String, ExtraInfo>,
+    // pub hidden: bool,
+    // pub icon: String,
+    // pub interface: String,
+    // pub mptcp: bool,
+    // #[serde(rename = "routing-mark")]
+    // pub routing_mark: u64,
+    // pub smux: bool,
+    // pub tfo: bool,
+    // pub udp: bool,
+    // pub uot: bool,
+    // pub xudp: bool,
+    // pub fixed: Option<String>,
+    // #[serde(rename = "expectedStatus")]
+    // pub expected_status: Option<String>,
+    // #[serde(rename = "testUrl")]
+    // pub test_url: Option<String>,
 }
 
 /// A single proxy (has `id` field).
@@ -59,20 +59,19 @@ pub struct Proxy {
     pub history: Vec<HistoryEntry>,
     #[serde(rename = "type")]
     pub typ: ProxyType,
-
     // not in use
-    pub alive: bool,
-    #[serde(rename = "dialer-proxy")]
-    pub dialer_proxy: String,
-    pub extra: HashMap<String, ExtraInfo>,
-    pub interface: String,
-    pub mptcp: bool,
-    #[serde(rename = "routing-mark")]
-    pub routing_mark: u64,
-    pub smux: bool,
-    pub tfo: bool,
-    pub uot: bool,
-    pub xudp: bool,
+    // pub alive: bool,
+    // #[serde(rename = "dialer-proxy")]
+    // pub dialer_proxy: String,
+    // pub extra: HashMap<String, ExtraInfo>,
+    // pub interface: String,
+    // pub mptcp: bool,
+    // #[serde(rename = "routing-mark")]
+    // pub routing_mark: u64,
+    // pub smux: bool,
+    // pub tfo: bool,
+    // pub uot: bool,
+    // pub xudp: bool,
 }
 
 /// A single history record, under `history` or inside `extra`.
@@ -122,4 +121,13 @@ pub enum ProxyType {
     Fallback,
     URLTest,
     LoadBalance,
+}
+
+mod test {
+    #[test]
+    fn test_proxy_group() {
+        use super::*;
+        let json = include_str!("../../test.json");
+        serde_json::from_str::<Root>(json).unwrap();
+    }
 }

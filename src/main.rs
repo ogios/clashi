@@ -29,6 +29,7 @@ impl Widget for &App {
         .areas(area);
 
         self.board_state.draw_tab_pane(tab_pane, buf);
+        self.board_state.draw_tab(tab, buf);
         self.draw_bar(bar, buf);
 
         // let title = Line::from(" Counter App Tutorial ".bold());

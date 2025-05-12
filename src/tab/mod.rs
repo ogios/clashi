@@ -1,4 +1,7 @@
+use card::Card;
 use ratatui::widgets::{Tabs, Widget};
+
+use crate::backend::{data::ProxyGroup, get_proxy_groups};
 
 mod card;
 
@@ -14,6 +17,9 @@ impl BoardWidget {
             current_tab: 0,
             tabs: Box::new([Tab::Proxy(ProxyTabState {
                 name: "Proxy".to_string(),
+                groups: get_proxy_groups(),
+                group_card_wdiget: Card::new(4, 20),
+                current_page: ProxyTabStatePage::Group,
             })]),
         }
     }
@@ -26,7 +32,9 @@ impl BoardWidget {
 
         tabs.render(area, buf);
     }
-    pub fn draw_tab(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {}
+    pub fn draw_tab(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+        self.tabs[self.current_tab].draw(area, buf);
+    }
 }
 
 #[derive(Debug)]
@@ -47,9 +55,38 @@ impl Tab {
 }
 
 #[derive(Debug)]
+enum ProxyTabStatePage {
+    Group,
+    Proxy,
+}
+
+#[derive(Debug)]
 pub struct ProxyTabState {
     name: String,
+    groups: Vec<ProxyGroup>,
+    group_card_wdiget: Card,
+    current_page: ProxyTabStatePage,
 }
 impl ProxyTabState {
-    fn draw(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {}
+    fn draw(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+        self.group_card_wdiget.draw(area, buf, &self.groups);
+    }
+    fn key_event(&mut self, key: crossterm::event::KeyEvent) {
+        match self.current_page {
+            ProxyTabStatePage::Group => {
+                if key.code == crossterm::event::KeyCode::Enter {
+                    self.current_page = ProxyTabStatePage::Proxy;
+                } else {
+                    self.group_card_wdiget.key_event(key);
+                }
+            }
+            ProxyTabStatePage::Proxy => {
+                if key.code == crossterm::event::KeyCode::Esc {
+                    self.current_page = ProxyTabStatePage::Group;
+                } else {
+                    todo!()
+                }
+            }
+        }
+    }
 }
