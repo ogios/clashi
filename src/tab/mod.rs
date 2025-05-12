@@ -35,6 +35,19 @@ impl BoardWidget {
     pub fn draw_tab(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         self.tabs[self.current_tab].draw(area, buf);
     }
+    pub fn key_event(&mut self, key: crossterm::event::KeyEvent) {
+        match key.code {
+            crossterm::event::KeyCode::Tab => {
+                self.current_tab = (self.current_tab + 1) % self.tabs.len();
+            }
+            crossterm::event::KeyCode::BackTab => {
+                self.current_tab = (self.current_tab + self.tabs.len() - 1) % self.tabs.len();
+            }
+            _ => {
+                self.tabs[self.current_tab].key_event(key);
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -50,6 +63,11 @@ impl Tab {
     fn draw(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         match self {
             Tab::Proxy(state) => state.draw(area, buf),
+        }
+    }
+    fn key_event(&mut self, key: crossterm::event::KeyEvent) {
+        match self {
+            Tab::Proxy(state) => state.key_event(key),
         }
     }
 }
