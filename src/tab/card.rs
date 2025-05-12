@@ -84,13 +84,13 @@ impl Card {
         use crossterm::event::KeyCode::*;
         match e.code {
             Char('h') | Up => {
-                self.k();
+                self.h();
             }
             Char('j') | Down => {
                 self.j();
             }
             Char('k') | Left => {
-                self.h();
+                self.k();
             }
             Char('l') | Right => {
                 self.l();
