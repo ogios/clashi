@@ -18,7 +18,7 @@ impl BoardWidget {
             tabs: Box::new([Tab::Proxy(ProxyTabState {
                 name: "Proxy".to_string(),
                 groups: get_proxy_groups(),
-                group_card_wdiget: Card::new(4, 20),
+                group_card_wdiget: Card::new(4, 25),
                 current_page: ProxyTabStatePage::Group,
             })]),
         }

@@ -217,11 +217,9 @@ impl Card {
 }
 
 fn draw_card_proxy_group(area: Rect, buf: &mut Buffer, data: &ProxyGroup) {
-    let block = Block::bordered();
-    let block = if let Some(now) = data.now.as_ref() {
-        block.title_top(format!("{}{}", data.name, now))
-    } else {
-        block.title_top(data.name.clone())
+    let mut block = Block::bordered();
+    if let Some(now) = data.now.as_ref() {
+        block = block.title_top(now.to_owned())
     };
     Paragraph::new(data.name.clone())
         .wrap(Wrap { trim: false })
