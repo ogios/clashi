@@ -1,4 +1,4 @@
-use std::{cell::Cell, str::FromStr};
+use std::cell::Cell;
 
 use ratatui::{
     buffer::Buffer,
