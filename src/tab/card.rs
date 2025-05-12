@@ -1,9 +1,9 @@
-use std::cell::Cell;
+use std::{cell::Cell, str::FromStr};
 
 use ratatui::{
     buffer::Buffer,
     layout::{Layout, Rect},
-    style::Style,
+    style::{Style, Stylize},
     text::Line,
     widgets::{Block, Paragraph, Widget, Wrap},
 };
@@ -201,7 +201,7 @@ impl Card {
                 break;
             }
             let data = &data[index];
-            draw_card_proxy_group(card_area, buf, data);
+            draw_card_proxy_group(card_area, buf, data, index == self.current_selection);
         }
 
         match row_leak {
@@ -216,12 +216,29 @@ impl Card {
     }
 }
 
-fn draw_card_proxy_group(area: Rect, buf: &mut Buffer, data: &ProxyGroup) {
-    let mut block = Block::bordered();
+fn draw_card_proxy_group(area: Rect, buf: &mut Buffer, data: &ProxyGroup, is_selected: bool) {
+    let mut block = Block::bordered().title_top({
+        let ty = data
+            .typ
+            .str()
+            .bg(ratatui::style::Color::White)
+            .fg(ratatui::style::Color::Black);
+        if is_selected {
+            ty.bg(ratatui::style::Color::Green)
+        } else {
+            ty
+        }
+    });
+
+    if is_selected {
+        block = block.green();
+    }
+
     if let Some(now) = data.now.as_ref() {
-        block = block.title_top(now.to_owned())
+        block = block.title_bottom(now.to_owned().italic())
     };
-    Paragraph::new(data.name.clone())
+
+    Paragraph::new(data.name.clone().bold())
         .wrap(Wrap { trim: false })
         .block(block)
         .render(area, buf);

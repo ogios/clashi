@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use strum_macros::IntoStaticStr;
 
 /// Top-level structure matching `debug.json`.  
 #[derive(Debug, Serialize, Deserialize)]
@@ -89,7 +90,7 @@ pub struct ExtraInfo {
 }
 
 /// Type of proxy or group, matching the `type` field.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, IntoStaticStr)]
 // #[serde(rename_all = "PascalCase")]
 pub enum ProxyType {
     Direct,
@@ -121,6 +122,21 @@ pub enum ProxyType {
     Fallback,
     URLTest,
     LoadBalance,
+}
+impl ProxyType {
+    pub fn is_group(&self) -> bool {
+        matches!(
+            self,
+            ProxyType::Relay
+                | ProxyType::Selector
+                | ProxyType::Fallback
+                | ProxyType::URLTest
+                | ProxyType::LoadBalance
+        )
+    }
+    pub fn str(&self) -> &'static str {
+        self.into()
+    }
 }
 
 mod test {
