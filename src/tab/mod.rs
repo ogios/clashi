@@ -105,30 +105,30 @@ impl ProxyTabState {
         }
     }
     fn key_event(&mut self, key: crossterm::event::KeyEvent) {
+        use crossterm::event::KeyCode::*;
+
         match self.current_page {
-            ProxyTabStatePage::Group => {
-                if key.code == crossterm::event::KeyCode::Enter {
-                    self.current_page = ProxyTabStatePage::Proxy;
-                } else {
-                    self.group_card_wdiget.key_event(key);
-                }
-            }
-            ProxyTabStatePage::Proxy => {
-                use crossterm::event::KeyCode::*;
-                match key.code {
-                    Enter | Char(' ') => todo!(),
-                    Up | Char('j') => self.proxy_table.j(),
-                    Down | Char('k') => self.proxy_table.k(),
-                    Home => todo!(),
-                    End => todo!(),
-                    Char('u') if key.modifiers == KeyModifiers::CONTROL => todo!(),
-                    PageUp => todo!(),
-                    Char('d') if key.modifiers == KeyModifiers::CONTROL => todo!(),
-                    PageDown => todo!(),
-                    Esc => self.current_page = ProxyTabStatePage::Group,
-                    _ => {}
-                }
-            }
+            ProxyTabStatePage::Group => match key.code {
+                Char(' ') | Enter => self.current_page = ProxyTabStatePage::Proxy,
+                Char('h') | Up => self.group_card_wdiget.h(),
+                Char('j') | Down => self.group_card_wdiget.j(),
+                Char('k') | Left => self.group_card_wdiget.k(),
+                Char('l') | Right => self.group_card_wdiget.l(),
+                _ => {}
+            },
+            ProxyTabStatePage::Proxy => match key.code {
+                Esc => self.current_page = ProxyTabStatePage::Group,
+                Char(' ') | Enter => todo!(),
+                Char('j') | Up => self.proxy_table.j(),
+                Char('k') | Down => self.proxy_table.k(),
+                Home => todo!(),
+                End => todo!(),
+                Char('u') if key.modifiers == KeyModifiers::CONTROL => todo!(),
+                PageUp => todo!(),
+                Char('d') if key.modifiers == KeyModifiers::CONTROL => todo!(),
+                PageDown => todo!(),
+                _ => {}
+            },
         }
     }
 }

@@ -80,39 +80,20 @@ impl Card {
         }
     }
 
-    pub fn key_event(&mut self, e: crossterm::event::KeyEvent) {
-        use crossterm::event::KeyCode::*;
-        match e.code {
-            Char('h') | Up => {
-                self.h();
-            }
-            Char('j') | Down => {
-                self.j();
-            }
-            Char('k') | Left => {
-                self.k();
-            }
-            Char('l') | Right => {
-                self.l();
-            }
-            _ => {}
-        }
-    }
-
     /// left selection
-    fn h(&mut self) {
+    pub fn h(&mut self) {
         self.current_selection = self.current_selection.saturating_sub(1);
         self.check_if_within_page();
     }
 
-    fn l(&mut self) {
+    pub fn l(&mut self) {
         let max_num = self.max_item_num.get().unwrap() - 1;
         let select = self.current_selection + 1;
         self.current_selection = max_num.min(select);
         self.check_if_within_page();
     }
 
-    fn j(&mut self) {
+    pub fn j(&mut self) {
         let max_num = self.max_item_num.get().unwrap() - 1;
         let select = self.current_selection + self.cards_in_a_row.get().unwrap();
         self.current_selection = max_num.min(select);
@@ -120,7 +101,7 @@ impl Card {
     }
 
     // HAVE NOT CHECKED
-    fn k(&mut self) {
+    pub fn k(&mut self) {
         self.current_selection = 0
             .max(self.current_selection as isize - self.cards_in_a_row.get().unwrap() as isize)
             as usize;

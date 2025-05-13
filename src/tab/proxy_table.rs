@@ -1,13 +1,12 @@
 use ratatui::{
-    layout::{Layout, Margin},
+    layout::Layout,
     style::{Modifier, Style, Stylize},
     widgets::{
-        Block, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Table,
-        TableState,
+        Row, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Table, TableState,
     },
 };
 
-use crate::backend::{ProxyGroup, SelectableProxy};
+use crate::backend::ProxyGroup;
 
 #[derive(Debug)]
 pub struct ProxyPage {
@@ -31,10 +30,6 @@ impl ProxyPage {
     pub fn k(&mut self) {
         self.state.select_previous();
         self.scroll_state = self.scroll_state.position(self.state.selected().unwrap());
-    }
-
-    pub fn next_page(&mut self) {
-        // self.state.select
     }
 
     fn draw_table(
