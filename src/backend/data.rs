@@ -5,20 +5,20 @@ use strum_macros::IntoStaticStr;
 /// Top-level structure matching `debug.json`.  
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Root {
-    pub proxies: HashMap<String, ProxyEntry>,
+    pub proxies: HashMap<String, ProxyEntryRaw>,
 }
 
 /// An entry under `proxies`, either a group (has `all`) or a proxy (has `id`).  
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum ProxyEntry {
-    Group(ProxyGroup),
-    Proxy(Proxy),
+pub enum ProxyEntryRaw {
+    Group(ProxyGroupRaw),
+    Proxy(ProxyRaw),
 }
 
 /// A proxy group (has `all` field).
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ProxyGroup {
+pub struct ProxyGroupRaw {
     // in use
     pub all: Vec<String>,
     pub history: Vec<HistoryEntry>,
@@ -27,6 +27,7 @@ pub struct ProxyGroup {
     pub now: Option<String>,
     #[serde(rename = "type")]
     pub typ: ProxyType,
+    pub udp: bool,
     // not in use
     // pub alive: bool,
     // #[serde(rename = "dialer-proxy")]
@@ -52,7 +53,7 @@ pub struct ProxyGroup {
 
 /// A single proxy (has `id` field).
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Proxy {
+pub struct ProxyRaw {
     // in use
     pub id: String,
     pub name: String,

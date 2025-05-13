@@ -1,9 +1,10 @@
 use card::Card;
 use ratatui::widgets::{Tabs, Widget};
 
-use crate::backend::{data::ProxyGroup, get_proxy_groups};
+use crate::backend::{ProxyGroup, get_proxy_groups};
 
 mod card;
+mod proxy_table;
 
 #[derive(Debug)]
 pub struct BoardWidget {
@@ -82,8 +83,8 @@ enum ProxyTabStatePage {
 pub struct ProxyTabState {
     name: String,
     groups: Vec<ProxyGroup>,
-    group_card_wdiget: Card,
     current_page: ProxyTabStatePage,
+    group_card_wdiget: Card,
 }
 impl ProxyTabState {
     fn draw(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {

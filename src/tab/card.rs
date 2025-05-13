@@ -8,7 +8,7 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget, Wrap},
 };
 
-use crate::backend::data::ProxyGroup;
+use crate::backend::ProxyGroup;
 
 #[derive(Debug)]
 pub struct Card {
@@ -212,18 +212,16 @@ impl Card {
 }
 
 fn draw_card_proxy_group(area: Rect, buf: &mut Buffer, data: &ProxyGroup, is_selected: bool) {
-    let mut block = Block::bordered().title_top({
-        let ty = data
-            .typ
-            .str()
-            .bg(ratatui::style::Color::White)
-            .fg(ratatui::style::Color::Black);
-        if is_selected {
-            ty.bg(ratatui::style::Color::Green)
-        } else {
-            ty
-        }
-    });
+    let mut block = Block::bordered()
+        .title_top({
+            let ty = data.proxy_type.str().on_white().black();
+            if is_selected { ty.on_green() } else { ty }
+        })
+        .title_top(
+            Line::from(data.latency.map_or("--".to_string(), |l| format!("{l}ms")))
+                .right_aligned()
+                .bold(),
+        );
 
     if is_selected {
         block = block.green();
@@ -248,7 +246,7 @@ fn draw_scroll_hint(area: Rect, buf: &mut Buffer, is_up: bool) {
     }
 
     Paragraph::new(lines)
-        .style(Style::new().bg(ratatui::style::Color::LightBlue))
+        .style(Style::new().on_light_blue())
         .centered()
         .render(area, buf);
 }
