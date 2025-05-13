@@ -17,10 +17,10 @@ pub struct ProxyGroup {
 
 #[derive(Debug, Clone)]
 pub struct SelectableProxy {
-    name: String,
-    udp: bool,
-    proxy_type: data::ProxyType,
-    latency: Option<u64>,
+    pub name: String,
+    pub udp: bool,
+    pub proxy_type: data::ProxyType,
+    pub latency: Option<u64>,
 }
 impl SelectableProxy {
     pub fn from_group(group: &ProxyGroupRaw, root: &Root, cache: &HashMap<String, Self>) -> Self {

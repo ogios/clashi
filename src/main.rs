@@ -19,7 +19,7 @@ pub struct App {
     board_state: BoardWidget,
     exit: bool,
 }
-impl Widget for &App {
+impl Widget for &mut App {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let [tab_pane, separate_line, tab, bar] = Layout::vertical([
             ratatui::layout::Constraint::Length(1),
@@ -76,7 +76,7 @@ impl App {
         Ok(())
     }
 
-    fn draw(&self, frame: &mut Frame) {
+    fn draw(&mut self, frame: &mut Frame) {
         frame.render_widget(self, frame.area());
     }
 
@@ -93,9 +93,7 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key: event::KeyEvent) {
-        if key.code == crossterm::event::KeyCode::Esc
-            || key.code == crossterm::event::KeyCode::Char('q')
-        {
+        if key.code == crossterm::event::KeyCode::Char('q') {
             self.exit = true;
             return;
         }

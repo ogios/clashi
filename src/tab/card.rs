@@ -13,7 +13,7 @@ use crate::backend::ProxyGroup;
 #[derive(Debug)]
 pub struct Card {
     // card item selection, not row selection
-    current_selection: usize,
+    pub current_selection: usize,
     // start offset of the row to be displayed in the current page
     row_offset: usize,
     // controls the leak of the page

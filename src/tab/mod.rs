@@ -1,4 +1,5 @@
 use card::Card;
+use crossterm::event::KeyModifiers;
 use ratatui::widgets::{Tabs, Widget};
 
 use crate::backend::{ProxyGroup, get_proxy_groups};
@@ -21,6 +22,7 @@ impl BoardWidget {
                 groups: get_proxy_groups(),
                 group_card_wdiget: Card::new(4, 25),
                 current_page: ProxyTabStatePage::Group,
+                proxy_table: proxy_table::ProxyPage::new(),
             })]),
         }
     }
@@ -33,7 +35,7 @@ impl BoardWidget {
 
         tabs.render(area, buf);
     }
-    pub fn draw_tab(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+    pub fn draw_tab(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         self.tabs[self.current_tab].draw(area, buf);
     }
     pub fn key_event(&mut self, key: crossterm::event::KeyEvent) {
@@ -61,7 +63,7 @@ impl Tab {
             Tab::Proxy(state) => &state.name,
         }
     }
-    fn draw(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+    fn draw(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         match self {
             Tab::Proxy(state) => state.draw(area, buf),
         }
@@ -85,10 +87,22 @@ pub struct ProxyTabState {
     groups: Vec<ProxyGroup>,
     current_page: ProxyTabStatePage,
     group_card_wdiget: Card,
+    proxy_table: proxy_table::ProxyPage,
 }
 impl ProxyTabState {
-    fn draw(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-        self.group_card_wdiget.draw(area, buf, &self.groups);
+    fn draw(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+        match self.current_page {
+            ProxyTabStatePage::Group => {
+                self.group_card_wdiget.draw(area, buf, &self.groups);
+            }
+            ProxyTabStatePage::Proxy => {
+                self.proxy_table.draw(
+                    area,
+                    buf,
+                    &self.groups[self.group_card_wdiget.current_selection],
+                );
+            }
+        }
     }
     fn key_event(&mut self, key: crossterm::event::KeyEvent) {
         match self.current_page {
@@ -100,10 +114,19 @@ impl ProxyTabState {
                 }
             }
             ProxyTabStatePage::Proxy => {
-                if key.code == crossterm::event::KeyCode::Esc {
-                    self.current_page = ProxyTabStatePage::Group;
-                } else {
-                    todo!()
+                use crossterm::event::KeyCode::*;
+                match key.code {
+                    Enter | Char(' ') => todo!(),
+                    Up | Char('j') => self.proxy_table.j(),
+                    Down | Char('k') => self.proxy_table.k(),
+                    Home => todo!(),
+                    End => todo!(),
+                    Char('u') if key.modifiers == KeyModifiers::CONTROL => todo!(),
+                    PageUp => todo!(),
+                    Char('d') if key.modifiers == KeyModifiers::CONTROL => todo!(),
+                    PageDown => todo!(),
+                    Esc => self.current_page = ProxyTabStatePage::Group,
+                    _ => {}
                 }
             }
         }
