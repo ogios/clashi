@@ -101,26 +101,21 @@ impl Card {
 
     /// left selection
     fn h(&mut self) {
-        self.current_selection = 0.max(self.current_selection - 1);
+        self.current_selection = self.current_selection.saturating_sub(1);
         self.check_if_within_page();
     }
 
     fn l(&mut self) {
-        self.current_selection = self
-            .max_item_num
-            .get()
-            .unwrap()
-            .min(self.current_selection + 1);
+        let max_num = self.max_item_num.get().unwrap() - 1;
+        let select = self.current_selection + 1;
+        self.current_selection = max_num.min(select);
         self.check_if_within_page();
     }
 
     fn j(&mut self) {
-        self.current_selection = self
-            .max_item_num
-            .get()
-            .unwrap()
-            .min(self.current_selection + self.cards_in_a_row.get().unwrap());
-
+        let max_num = self.max_item_num.get().unwrap() - 1;
+        let select = self.current_selection + self.cards_in_a_row.get().unwrap();
+        self.current_selection = max_num.min(select);
         self.check_if_within_page();
     }
 
