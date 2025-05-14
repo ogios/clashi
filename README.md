@@ -3,6 +3,10 @@
 > [!CAUTION]
 > WIP project
 
+![showcase](https://github.com/user-attachments/assets/ec04356a-c0e1-4264-b1c8-40bb574e3883)
+
+
+
 This only works as a dashboard for clash backend:
 
 - Check groups && proxies
