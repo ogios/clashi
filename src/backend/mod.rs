@@ -152,3 +152,18 @@ pub fn get_proxy_groups() -> Vec<ProxyGroup> {
 
     groups
 }
+
+pub fn select_proxy(group: &str, proxy: &str) {
+    let url = format!("http://localhost:9090/proxies/{group}");
+    let client = reqwest::blocking::Client::new();
+    let res = client
+        .put(&url)
+        .header("Content-Type", "application/json")
+        .body(format!(r#"{{"name": "{}"}}"#, proxy))
+        .send()
+        .unwrap();
+
+    if !res.status().is_success() {
+        panic!("Failed to select proxy: {}", res.status());
+    }
+}

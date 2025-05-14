@@ -19,6 +19,9 @@ impl ProxyPage {
             scroll_state: ScrollbarState::default(),
         }
     }
+    pub fn get_current_item(&self) -> Option<usize> {
+        self.state.selected()
+    }
 
     pub fn j(&mut self) {
         self.state.select_next();

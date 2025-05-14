@@ -2,7 +2,7 @@ use crossterm::event::KeyModifiers;
 use group_page::GroupPage;
 use ratatui::widgets::{Tabs, Widget};
 
-use crate::backend::{ProxyGroup, get_proxy_groups};
+use crate::backend::{ProxyGroup, SelectableProxy, get_proxy_groups, select_proxy};
 
 mod card;
 mod group_page;
@@ -91,6 +91,17 @@ pub struct ProxyTabState {
     proxy_table: proxy_page::ProxyPage,
 }
 impl ProxyTabState {
+    fn get_current_group(&self) -> Option<&ProxyGroup> {
+        self.groups.get(self.group_card_wdiget.get_current_item())
+    }
+    fn refresh(&mut self) {
+        self.groups = get_proxy_groups();
+    }
+    fn get_current_proxy<'a>(&self, group: &'a ProxyGroup) -> Option<&'a SelectableProxy> {
+        self.proxy_table
+            .get_current_item()
+            .map(|index| &group.proxies[index])
+    }
     fn draw(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         match self.current_page {
             ProxyTabStatePage::Group => {
@@ -119,7 +130,15 @@ impl ProxyTabState {
             },
             ProxyTabStatePage::Proxy => match key.code {
                 Esc => self.current_page = ProxyTabStatePage::Group,
-                Char(' ') | Enter => todo!(),
+                Char(' ') | Enter => {
+                    if let Some((g, p)) = self
+                        .get_current_group()
+                        .and_then(|group| self.get_current_proxy(group).map(|proxy| (group, proxy)))
+                    {
+                        select_proxy(&g.name, &p.name);
+                        self.refresh();
+                    };
+                }
                 Char('j') | Up => self.proxy_table.j(),
                 Char('k') | Down => self.proxy_table.k(),
                 Home => todo!(),
