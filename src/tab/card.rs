@@ -11,7 +11,23 @@ use ratatui::{
 use crate::backend::ProxyGroup;
 
 #[derive(Debug)]
-pub struct Card {
+enum SelectOperation {
+    Up,
+    Down,
+}
+
+/// the number repersents how many rows to leak
+enum RowPageLeak {
+    /// leak a row's uppper part
+    Up(Rect),
+    /// leak a row's lower part
+    Down(Rect),
+    /// no leak
+    Fit,
+}
+
+#[derive(Debug)]
+pub struct GroupPage {
     // card item selection, not row selection
     pub current_selection: usize,
     // start offset of the row to be displayed in the current page
@@ -28,25 +44,9 @@ pub struct Card {
     max_item_num: Cell<Option<usize>>,
 }
 
-#[derive(Debug)]
-enum SelectOperation {
-    Up,
-    Down,
-}
-
-/// the number repersents how many rows to leak
-enum RowPageLeak {
-    /// leak a row's uppper part
-    Up(Rect),
-    /// leak a row's lower part
-    Down(Rect),
-    /// no leak
-    Fit,
-}
-
-impl Card {
-    pub fn new(height_of_each: u16, threshold_width: u16) -> Card {
-        Card {
+impl GroupPage {
+    pub fn new(height_of_each: u16, threshold_width: u16) -> GroupPage {
+        GroupPage {
             row_offset: 0,
             current_selection: 0,
             height_of_each,
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn test_cal() {
         // Create a Card instance with mock parameters
-        let card = Card::new(4, 10);
+        let card = GroupPage::new(4, 10);
 
         // Mock a Rect with specific dimensions
         let rect = Rect {

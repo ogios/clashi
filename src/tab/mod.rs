@@ -1,4 +1,4 @@
-use card::Card;
+use card::GroupPage;
 use crossterm::event::KeyModifiers;
 use ratatui::widgets::{Tabs, Widget};
 
@@ -20,7 +20,7 @@ impl BoardWidget {
             tabs: Box::new([Tab::Proxy(ProxyTabState {
                 name: "Proxy".to_string(),
                 groups: get_proxy_groups(),
-                group_card_wdiget: Card::new(4, 25),
+                group_card_wdiget: GroupPage::new(4, 25),
                 current_page: ProxyTabStatePage::Group,
                 proxy_table: proxy_table::ProxyPage::new(),
             })]),
@@ -86,7 +86,7 @@ pub struct ProxyTabState {
     name: String,
     groups: Vec<ProxyGroup>,
     current_page: ProxyTabStatePage,
-    group_card_wdiget: Card,
+    group_card_wdiget: GroupPage,
     proxy_table: proxy_table::ProxyPage,
 }
 impl ProxyTabState {
