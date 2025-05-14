@@ -128,7 +128,7 @@ impl GroupPage {
                 (RowPageLeak::Down(leak_rect), cards_area)
             } else {
                 constrain.reverse();
-                let [cards_area, leak_rect] = Layout::vertical(constrain).areas(rect);
+                let [leak_rect, cards_area] = Layout::vertical(constrain).areas(rect);
                 (RowPageLeak::Up(leak_rect), cards_area)
             }
         };
@@ -171,6 +171,20 @@ impl GroupPage {
         self.max_item_num.set(Some(data.len()));
         let (card_start_offset, cards_rect, row_leak) = self.cal(area);
 
+        // if all cards can be displayed, no need to draw scroll hint
+        let display_card_num = cards_rect.len();
+        if card_start_offset != 0 || display_card_num < data.len() {
+            match row_leak {
+                RowPageLeak::Up(scroll_hint) => {
+                    draw_scroll_hint(scroll_hint, buf, true);
+                }
+                RowPageLeak::Down(scroll_hint) => {
+                    draw_scroll_hint(scroll_hint, buf, false);
+                }
+                RowPageLeak::Fit => {}
+            }
+        }
+
         for (i, card_area) in cards_rect.into_iter().enumerate() {
             let index = card_start_offset + i;
             if index >= data.len() {
@@ -178,16 +192,6 @@ impl GroupPage {
             }
             let data = &data[index];
             draw_card_proxy_group(card_area, buf, data, index == self.current_selection);
-        }
-
-        match row_leak {
-            RowPageLeak::Up(scroll_hint) => {
-                draw_scroll_hint(scroll_hint, buf, true);
-            }
-            RowPageLeak::Down(scroll_hint) => {
-                draw_scroll_hint(scroll_hint, buf, false);
-            }
-            RowPageLeak::Fit => {}
         }
     }
 }
