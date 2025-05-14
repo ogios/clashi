@@ -1,154 +1,55 @@
-use std::cell::Cell;
-
 use ratatui::{
     buffer::Buffer,
-    layout::{Layout, Rect},
-    style::{Style, Stylize},
+    layout::Rect,
+    style::Stylize,
     text::Line,
     widgets::{Block, Paragraph, Widget, Wrap},
 };
 
 use crate::backend::ProxyGroup;
 
+use super::card::{Card, CardState};
+
 #[derive(Debug)]
 pub struct GroupPage {
-    // card item selection, not row selection
-    pub current_selection: usize,
-    // start offset of the row to be displayed in the current page
-    row_offset: usize,
-
-    height_of_each: u16,
-    threshold_width: u16,
-
-    // this should be set after first draw inside `cal`
-    cards_in_a_row: Cell<Option<usize>>,
-    rows: Cell<Option<u16>>,
-    max_item_num: Cell<Option<usize>>,
+    card: Card,
+    card_state: CardState,
 }
 
 impl GroupPage {
     pub fn new(height_of_each: u16, threshold_width: u16) -> GroupPage {
         GroupPage {
-            row_offset: 0,
-            current_selection: 0,
-            height_of_each,
-            threshold_width,
-            cards_in_a_row: Cell::new(None),
-            rows: Cell::new(None),
-            max_item_num: Cell::new(None),
+            card: Card::new(height_of_each, threshold_width),
+            card_state: CardState::default(),
         }
     }
-
-    fn get_item_num_range(&self) -> (usize, usize) {
-        let cards_in_a_row = self.cards_in_a_row.get().unwrap();
-        let rows = self.rows.get().unwrap();
-        let start_offset = self.row_offset * cards_in_a_row;
-        let end_offset = start_offset + (rows as usize) * cards_in_a_row;
-        (start_offset, end_offset)
+    pub fn draw(&mut self, area: Rect, buf: &mut Buffer, data: &[ProxyGroup]) {
+        self.card.draw(
+            &mut self.card_state,
+            area,
+            buf,
+            data.len(),
+            |index, rect, buffer, state| {
+                let is_selected = index == state.get_current_item();
+                let data = &data[index];
+                draw_card_proxy_group(rect, buffer, data, is_selected);
+            },
+        );
     }
-
-    fn check_if_within_page(&mut self) {
-        let range = self.get_item_num_range();
-        if self.current_selection >= range.1 {
-            self.row_offset += 1;
-        } else if self.current_selection < range.0 {
-            self.row_offset = self.row_offset.saturating_sub(1);
-        }
-    }
-
-    /// left selection
     pub fn h(&mut self) {
-        self.current_selection = self.current_selection.saturating_sub(1);
-        self.check_if_within_page();
+        self.card_state.previous_item();
     }
-
     pub fn l(&mut self) {
-        let max_num = self.max_item_num.get().unwrap() - 1;
-        let select = self.current_selection + 1;
-        self.current_selection = max_num.min(select);
-        self.check_if_within_page();
+        self.card_state.next_item();
     }
-
     pub fn j(&mut self) {
-        let max_num = self.max_item_num.get().unwrap() - 1;
-        let select = self.current_selection + self.cards_in_a_row.get().unwrap();
-        self.current_selection = max_num.min(select);
-        self.check_if_within_page();
+        self.card_state.next_row();
     }
-
     pub fn k(&mut self) {
-        self.current_selection = 0
-            .max(self.current_selection as isize - self.cards_in_a_row.get().unwrap() as isize)
-            as usize;
-        self.check_if_within_page();
+        self.card_state.previous_row();
     }
-
-    fn cal(&self, rect: Rect) -> (usize, Vec<Rect>, Option<Rect>) {
-        // how many rows can be displayed
-        let rows = rect.height / self.height_of_each;
-        // how many leaked lines
-        let leaks = rect.height % self.height_of_each;
-
-        let (row_page_leak, cards_area) = if leaks == 0 {
-            // no leak
-            (None, rect)
-        } else {
-            // always leak down
-            let [cards_area, leak_rect] = Layout::vertical([
-                ratatui::layout::Constraint::Percentage(100),
-                ratatui::layout::Constraint::Length(leaks),
-            ])
-            .areas(rect);
-            (Some(leak_rect), cards_area)
-        };
-
-        let cards_in_a_row = (cards_area.width / self.threshold_width) as usize;
-        self.cards_in_a_row.set(Some(cards_in_a_row));
-
-        // item start index
-        let start_offset = self.row_offset * cards_in_a_row;
-
-        let render_rows: Vec<Rect> = Layout::vertical(
-            std::iter::repeat(ratatui::layout::Constraint::Length(self.height_of_each))
-                .take(rows as usize),
-        )
-        .split(cards_area)
-        .iter()
-        .copied()
-        .flat_map(|row_rect| {
-            Layout::horizontal(
-                std::iter::repeat(ratatui::layout::Constraint::Ratio(1, cards_in_a_row as u32))
-                    .take(cards_in_a_row),
-            )
-            .split(row_rect)
-            .to_vec()
-        })
-        .collect();
-
-        self.rows.set(Some(rows));
-
-        (start_offset, render_rows, row_page_leak)
-    }
-
-    pub fn draw(&self, area: Rect, buf: &mut Buffer, data: &[ProxyGroup]) {
-        self.max_item_num.set(Some(data.len()));
-        let (card_start_offset, cards_rect, row_leak) = self.cal(area);
-
-        // if all cards can be displayed, no need to draw scroll hint
-        if card_start_offset + cards_rect.len() < data.len() {
-            if let Some(rect) = row_leak {
-                draw_scroll_hint(rect, buf);
-            }
-        }
-
-        for (i, card_area) in cards_rect.into_iter().enumerate() {
-            let index = card_start_offset + i;
-            if index >= data.len() {
-                break;
-            }
-            let data = &data[index];
-            draw_card_proxy_group(card_area, buf, data, index == self.current_selection);
-        }
+    pub fn get_current_item(&self) -> usize {
+        self.card_state.get_current_item()
     }
 }
 
@@ -175,14 +76,5 @@ fn draw_card_proxy_group(area: Rect, buf: &mut Buffer, data: &ProxyGroup, is_sel
     Paragraph::new(data.name.clone().bold())
         .wrap(Wrap { trim: false })
         .block(block)
-        .render(area, buf);
-}
-
-fn draw_scroll_hint(area: Rect, buf: &mut Buffer) {
-    let mut lines: Vec<Line> = vec![Line::default(); area.height as usize];
-    lines.last_mut().unwrap().push_span("⌄");
-    Paragraph::new(lines)
-        .style(Style::new().on_light_blue())
-        .centered()
         .render(area, buf);
 }

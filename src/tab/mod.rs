@@ -100,7 +100,7 @@ impl ProxyTabState {
                 self.proxy_table.draw(
                     area,
                     buf,
-                    &self.groups[self.group_card_wdiget.current_selection],
+                    &self.groups[self.group_card_wdiget.get_current_item()],
                 );
             }
         }
