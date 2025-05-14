@@ -156,14 +156,41 @@ pub fn get_proxy_groups() -> Vec<ProxyGroup> {
 pub fn select_proxy(group: &str, proxy: &str) {
     let url = format!("http://localhost:9090/proxies/{group}");
     let client = reqwest::blocking::Client::new();
-    let res = client
+    let _ = client
         .put(&url)
         .header("Content-Type", "application/json")
         .body(format!(r#"{{"name": "{}"}}"#, proxy))
         .send()
+        .unwrap()
+        .error_for_status()
         .unwrap();
+}
 
-    if !res.status().is_success() {
-        panic!("Failed to select proxy: {}", res.status());
-    }
+const DEFAULT_LATENCY_TEXT_URL: &str = "https://www.gstatic.com/generate_204";
+const TIMEOUT: u64 = 5000;
+pub fn latency_test_group(group: &str) {
+    let url = format!(
+        "http://localhost:9090/group/{group}/delay?url={DEFAULT_LATENCY_TEXT_URL}&timeout={TIMEOUT}"
+    );
+    let client = reqwest::blocking::Client::new();
+    let _ = client
+        .get(&url)
+        .header("Content-Type", "application/json")
+        .send()
+        .unwrap()
+        .error_for_status()
+        .unwrap();
+}
+pub fn latency_test_proxy(proxy: &str) {
+    let url = format!(
+        "http://localhost:9090/proxies/{proxy}/delay?url={DEFAULT_LATENCY_TEXT_URL}&timeout={TIMEOUT}"
+    );
+    let client = reqwest::blocking::Client::new();
+    let _ = client
+        .get(&url)
+        .header("Content-Type", "application/json")
+        .send()
+        .unwrap()
+        .error_for_status()
+        .unwrap();
 }

@@ -2,7 +2,10 @@ use crossterm::event::KeyModifiers;
 use group_page::GroupPage;
 use ratatui::widgets::{Tabs, Widget};
 
-use crate::backend::{ProxyGroup, SelectableProxy, get_proxy_groups, select_proxy};
+use crate::backend::{
+    ProxyGroup, SelectableProxy, get_proxy_groups, latency_test_group, latency_test_proxy,
+    select_proxy,
+};
 
 mod card;
 mod group_page;
@@ -126,6 +129,12 @@ impl ProxyTabState {
                 Char('j') | Down => self.group_card_wdiget.j(),
                 Char('k') | Left => self.group_card_wdiget.k(),
                 Char('l') | Right => self.group_card_wdiget.l(),
+                Char('r') => {
+                    if let Some(g) = self.get_current_group() {
+                        latency_test_group(&g.name);
+                        self.refresh();
+                    }
+                }
                 _ => {}
             },
             ProxyTabStatePage::Proxy => match key.code {
@@ -147,6 +156,21 @@ impl ProxyTabState {
                 PageUp => todo!(),
                 Char('d') if key.modifiers == KeyModifiers::CONTROL => todo!(),
                 PageDown => todo!(),
+                Char('R') => {
+                    if let Some(g) = self.get_current_group() {
+                        latency_test_group(&g.name);
+                        self.refresh();
+                    }
+                }
+                Char('r') => {
+                    if let Some(p) = self
+                        .get_current_group()
+                        .and_then(|group| self.get_current_proxy(group))
+                    {
+                        latency_test_proxy(&p.name);
+                        self.refresh();
+                    };
+                }
                 _ => {}
             },
         }
