@@ -1,11 +1,12 @@
-use card::GroupPage;
 use crossterm::event::KeyModifiers;
+use group_page::GroupPage;
 use ratatui::widgets::{Tabs, Widget};
 
 use crate::backend::{ProxyGroup, get_proxy_groups};
 
 mod card;
-mod proxy_table;
+mod group_page;
+mod proxy_page;
 
 #[derive(Debug)]
 pub struct BoardWidget {
@@ -22,7 +23,7 @@ impl BoardWidget {
                 groups: get_proxy_groups(),
                 group_card_wdiget: GroupPage::new(4, 25),
                 current_page: ProxyTabStatePage::Group,
-                proxy_table: proxy_table::ProxyPage::new(),
+                proxy_table: proxy_page::ProxyPage::new(),
             })]),
         }
     }
@@ -87,7 +88,7 @@ pub struct ProxyTabState {
     groups: Vec<ProxyGroup>,
     current_page: ProxyTabStatePage,
     group_card_wdiget: GroupPage,
-    proxy_table: proxy_table::ProxyPage,
+    proxy_table: proxy_page::ProxyPage,
 }
 impl ProxyTabState {
     fn draw(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
