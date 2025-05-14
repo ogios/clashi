@@ -3,10 +3,8 @@ use ratatui::{
     layout::{Layout, Rect},
     style::{Style, Stylize},
     text::Line,
-    widgets::{Block, Paragraph, Widget, Wrap},
+    widgets::{Paragraph, Widget},
 };
-
-use crate::backend::ProxyGroup;
 
 #[derive(Debug)]
 pub struct Card {
@@ -64,7 +62,7 @@ impl Card {
         })
         .collect();
 
-        state.set_rows(rows);
+        state.set_rows_in_page(rows);
 
         (start_offset, render_rows, row_page_leak)
     }
@@ -104,7 +102,7 @@ pub struct CardState {
     row_offset: usize,
 
     cards_in_a_row: Option<usize>,
-    rows: Option<u16>,
+    rows_in_page: Option<u16>,
     max_item_num: Option<usize>,
 }
 
@@ -112,8 +110,8 @@ impl CardState {
     fn set_cards_in_a_row(&mut self, cards_in_a_row: usize) {
         self.cards_in_a_row = Some(cards_in_a_row);
     }
-    fn set_rows(&mut self, rows: u16) {
-        self.rows = Some(rows);
+    fn set_rows_in_page(&mut self, rows: u16) {
+        self.rows_in_page = Some(rows);
     }
     fn set_max_item_num(&mut self, max_item_num: usize) {
         self.max_item_num = Some(max_item_num);
@@ -121,7 +119,7 @@ impl CardState {
 
     fn get_item_num_range(&self) -> (usize, usize) {
         let cards_in_a_row = self.cards_in_a_row.unwrap();
-        let rows = self.rows.unwrap();
+        let rows = self.rows_in_page.unwrap();
         let start_offset = self.row_offset * cards_in_a_row;
         let end_offset = start_offset + (rows as usize) * cards_in_a_row;
         (start_offset, end_offset)
@@ -165,8 +163,12 @@ impl CardState {
         self.current_selection
     }
     pub fn get_current_row(&self) -> usize {
-        let row_item_num = self.cards_in_a_row.unwrap();
-        (self.current_selection + row_item_num - 1) / row_item_num // avoid float operation
+        self.current_selection / self.cards_in_a_row.unwrap()
+    }
+    pub fn get_total_rows_count(&self) -> usize {
+        self.max_item_num
+            .unwrap()
+            .div_ceil(self.cards_in_a_row.unwrap())
     }
 }
 

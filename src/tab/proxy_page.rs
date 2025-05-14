@@ -1,9 +1,7 @@
 use ratatui::{
     layout::Layout,
     style::{Modifier, Style, Stylize},
-    widgets::{
-        Row, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Table, TableState,
-    },
+    widgets::{Row, Scrollbar, ScrollbarState, StatefulWidget, Table, TableState},
 };
 
 use crate::backend::ProxyGroup;
@@ -86,9 +84,9 @@ impl ProxyPage {
         self.scroll_state = self.scroll_state.content_length(group.proxies.len());
         StatefulWidget::render(
             Scrollbar::default()
-                .orientation(ScrollbarOrientation::VerticalRight)
-                .begin_symbol(None)
-                .end_symbol(None),
+                .thumb_style(Style::default().fg(ratatui::style::Color::Green))
+                .begin_symbol(Some("↑"))
+                .end_symbol(Some("↓")),
             area,
             buf,
             &mut self.scroll_state,

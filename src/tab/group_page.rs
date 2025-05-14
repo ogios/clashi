@@ -1,9 +1,12 @@
 use ratatui::{
     buffer::Buffer,
-    layout::Rect,
-    style::Stylize,
+    layout::{Layout, Rect},
+    style::{Style, Stylize},
     text::Line,
-    widgets::{Block, Paragraph, Widget, Wrap},
+    widgets::{
+        Block, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget,
+        Wrap,
+    },
 };
 
 use crate::backend::ProxyGroup;
@@ -14,6 +17,7 @@ use super::card::{Card, CardState};
 pub struct GroupPage {
     card: Card,
     card_state: CardState,
+    scroll_state: ScrollbarState,
 }
 
 impl GroupPage {
@@ -21,12 +25,19 @@ impl GroupPage {
         GroupPage {
             card: Card::new(height_of_each, threshold_width),
             card_state: CardState::default(),
+            scroll_state: ScrollbarState::default(),
         }
     }
     pub fn draw(&mut self, area: Rect, buf: &mut Buffer, data: &[ProxyGroup]) {
+        let [cards_area, scrollbar_area] = Layout::horizontal([
+            ratatui::layout::Constraint::Percentage(100),
+            ratatui::layout::Constraint::Length(1),
+        ])
+        .areas(area);
+
         self.card.draw(
             &mut self.card_state,
-            area,
+            cards_area,
             buf,
             data.len(),
             |index, rect, buffer, state| {
@@ -35,7 +46,24 @@ impl GroupPage {
                 draw_card_proxy_group(rect, buffer, data, is_selected);
             },
         );
+
+        self.scroll_state = self
+            .scroll_state
+            .content_length(self.card_state.get_total_rows_count())
+            .position(self.card_state.get_current_row());
+
+        StatefulWidget::render(
+            Scrollbar::default()
+                .orientation(ScrollbarOrientation::VerticalRight)
+                .thumb_style(Style::default().fg(ratatui::style::Color::Green))
+                .begin_symbol(Some("↑"))
+                .end_symbol(Some("↓")),
+            scrollbar_area,
+            buf,
+            &mut self.scroll_state,
+        );
     }
+
     pub fn h(&mut self) {
         self.card_state.previous_item();
     }
