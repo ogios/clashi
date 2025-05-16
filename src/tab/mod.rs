@@ -1,6 +1,10 @@
+use std::sync::LazyLock;
+
 use crossterm::event::KeyModifiers;
 use group_page::GroupPage;
 use ratatui::widgets::{Tabs, Widget};
+use strum::IntoEnumIterator;
+use strum_macros::{EnumIter, IntoStaticStr};
 
 use crate::backend::{
     ProxyGroup, SelectableProxy, get_proxy_groups, latency_test_group, latency_test_proxy,
@@ -13,69 +17,82 @@ mod proxy_page;
 
 #[derive(Debug)]
 pub struct BoardWidget {
-    current_tab: usize,
-    tabs: Box<[Tab]>,
+    current_tab: Tab,
+    group_tab_state: ProxyTabState,
 }
 
 impl BoardWidget {
     pub fn new() -> Self {
         Self {
-            current_tab: 0,
-            tabs: Box::new([Tab::Proxy(ProxyTabState {
-                name: "Proxy".to_string(),
+            current_tab: Tab::Group,
+            group_tab_state: ProxyTabState {
                 groups: get_proxy_groups(),
                 group_card_wdiget: GroupPage::new(4, 25),
                 current_page: ProxyTabStatePage::Group,
                 proxy_table: proxy_page::ProxyPage::new(),
-            })]),
+            },
         }
     }
     pub fn draw_tab_pane(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-        let tab_titles: Vec<&str> = self.tabs.iter().map(|tab| tab.name()).collect();
-        let tabs = Tabs::new(tab_titles)
+        Tabs::new(Tab::all_names())
             .highlight_style(ratatui::style::Style::default().fg(ratatui::style::Color::Yellow))
             .divider("|")
-            .select(self.current_tab);
-
-        tabs.render(area, buf);
+            .select(Tab::variants().iter().position(|n| n == &self.current_tab))
+            .render(area, buf);
     }
     pub fn draw_tab(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-        self.tabs[self.current_tab].draw(area, buf);
+        match self.current_tab {
+            Tab::Group => {
+                self.group_tab_state.draw(area, buf);
+            }
+            Tab::Provider => {}
+        }
     }
     pub fn key_event(&mut self, key: crossterm::event::KeyEvent) {
         match key.code {
             crossterm::event::KeyCode::Tab => {
-                self.current_tab = (self.current_tab + 1) % self.tabs.len();
+                self.current_tab.next();
             }
             crossterm::event::KeyCode::BackTab => {
-                self.current_tab = (self.current_tab + self.tabs.len() - 1) % self.tabs.len();
+                self.current_tab.prev();
             }
-            _ => {
-                self.tabs[self.current_tab].key_event(key);
-            }
+            _ => match self.current_tab {
+                Tab::Group => {
+                    self.group_tab_state.key_event(key);
+                }
+                Tab::Provider => todo!(),
+            },
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, IntoStaticStr, EnumIter, Eq, PartialEq, Clone, Copy)]
 pub enum Tab {
-    Proxy(ProxyTabState),
+    Group,
+    Provider,
 }
 impl Tab {
-    fn name(&self) -> &str {
-        match self {
-            Tab::Proxy(state) => &state.name,
-        }
+    fn all_names() -> Vec<&'static str> {
+        static NAMES: LazyLock<Vec<&'static str>> =
+            LazyLock::new(|| Tab::iter().map(|t| t.into()).collect());
+        NAMES.clone()
     }
-    fn draw(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-        match self {
-            Tab::Proxy(state) => state.draw(area, buf),
-        }
+
+    fn variants() -> &'static [Self] {
+        static VARIANTS: LazyLock<Vec<Tab>> = LazyLock::new(|| Tab::iter().collect());
+        &VARIANTS
     }
-    fn key_event(&mut self, key: crossterm::event::KeyEvent) {
-        match self {
-            Tab::Proxy(state) => state.key_event(key),
-        }
+
+    fn next(&mut self) {
+        let variants = Self::variants();
+        let next_idx = (variants.iter().position(|v| v == self).unwrap() + 1) % variants.len();
+        *self = variants[next_idx];
+    }
+    fn prev(&mut self) {
+        let variants = Self::variants();
+        let prev_idx = (variants.iter().position(|v| v == self).unwrap() + variants.len() - 1)
+            % variants.len();
+        *self = variants[prev_idx]
     }
 }
 
@@ -87,7 +104,6 @@ enum ProxyTabStatePage {
 
 #[derive(Debug)]
 pub struct ProxyTabState {
-    name: String,
     groups: Vec<ProxyGroup>,
     current_page: ProxyTabStatePage,
     group_card_wdiget: GroupPage,
