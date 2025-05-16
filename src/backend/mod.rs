@@ -123,7 +123,7 @@ pub fn get_proxy_groups() -> Vec<ProxyGroup> {
     }
 
     let mut groups = raw_proxy_groups
-        .iter()
+        .into_iter()
         .map(|group| {
             let name = group.name.clone();
             let now = group.now.clone();
@@ -172,11 +172,7 @@ pub fn latency_test_group(group: &str) {
     let url = format!(
         "http://localhost:9090/group/{group}/delay?url={DEFAULT_LATENCY_TEXT_URL}&timeout={TIMEOUT}"
     );
-    let client = reqwest::blocking::Client::new();
-    let _ = client
-        .get(&url)
-        .header("Content-Type", "application/json")
-        .send()
+    let _ = reqwest::blocking::get(&url)
         .unwrap()
         .error_for_status()
         .unwrap();
@@ -185,12 +181,21 @@ pub fn latency_test_proxy(proxy: &str) {
     let url = format!(
         "http://localhost:9090/proxies/{proxy}/delay?url={DEFAULT_LATENCY_TEXT_URL}&timeout={TIMEOUT}"
     );
-    let client = reqwest::blocking::Client::new();
-    let _ = client
-        .get(&url)
-        .header("Content-Type", "application/json")
-        .send()
+    let _ = reqwest::blocking::get(&url)
         .unwrap()
         .error_for_status()
         .unwrap();
+}
+
+pub fn get_proxy_providers() -> Vec<data::Provider> {
+    let response: data::ProviderRoot =
+        reqwest::blocking::get("http://localhost:9090/providers/proxies")
+            .unwrap()
+            .json()
+            .unwrap();
+
+    let mut providers = response.providers.into_values().collect::<Vec<_>>();
+    providers.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+    providers
 }

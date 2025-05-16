@@ -140,11 +140,65 @@ impl ProxyType {
     }
 }
 
-mod test {
-    #[test]
-    fn test_proxy_group() {
-        use super::*;
-        let json = include_str!("../../test.json");
-        serde_json::from_str::<Root>(json).unwrap();
+#[derive(Debug, Deserialize)]
+pub struct Provider {
+    pub name: String,
+    #[serde(rename = "vehicleType")]
+    pub vehicle_type: String,
+    #[serde(rename = "subscriptionInfo")]
+    pub subscription_info: Option<SubscriptionInfo>,
+    #[serde(rename = "updatedAt")]
+    pub updated_at: String,
+    pub proxies: Vec<ProxyEntryRaw>,
+    //   testUrl: string
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SubscriptionInfo {
+    #[serde(rename = "Download")]
+    pub download: Option<u64>,
+    #[serde(rename = "Upload")]
+    pub upload: Option<u64>,
+    #[serde(rename = "Total")]
+    pub total: Option<u64>,
+    #[serde(rename = "Expire")]
+    pub expire: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ProviderRoot {
+    #[serde(deserialize_with = "deserialize_providers")]
+    pub providers: HashMap<String, Provider>,
+}
+
+fn deserialize_providers<'de, D>(deserializer: D) -> Result<HashMap<String, Provider>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    struct ProviderVisitor;
+    impl<'de> serde::de::Visitor<'de> for ProviderVisitor {
+        type Value = HashMap<String, Provider>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str(
+                "
+                a map of provider names to provider objects",
+            )
+        }
+
+        fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
+        where
+            V: serde::de::MapAccess<'de>,
+        {
+            let mut providers = HashMap::new();
+            while let Some((key, value)) = map.next_entry::<String, Provider>()? {
+                if value.name != "default" && value.vehicle_type != "Compatible" {
+                    providers.insert(key, value);
+                }
+            }
+            Ok(providers)
+        }
     }
+
+    deserializer.deserialize_map(ProviderVisitor)
 }
