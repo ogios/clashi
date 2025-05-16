@@ -162,7 +162,7 @@ pub struct SubscriptionInfo {
     #[serde(rename = "Total")]
     pub total: Option<u64>,
     #[serde(rename = "Expire")]
-    pub expire: Option<u64>,
+    pub expire: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]

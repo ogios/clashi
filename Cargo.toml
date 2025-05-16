@@ -7,6 +7,7 @@ edition = "2024"
 ratatui = { version = "0.30.0-alpha.2" }
 crossterm = "0.29.0"
 chrono = "0.4.40"
+humanize-duration = { version = "0.0.7", features = ["chrono"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 strum = "0.27.1"
