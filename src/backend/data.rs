@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use strum_macros::IntoStaticStr;
 
+use super::SelectableProxy;
+
 /// Top-level structure matching `debug.json`.  
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Root {
@@ -141,7 +143,7 @@ impl ProxyType {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Provider {
+pub struct ProviderRaw {
     pub name: String,
     #[serde(rename = "vehicleType")]
     pub vehicle_type: String,
@@ -201,4 +203,42 @@ where
     }
 
     deserializer.deserialize_map(ProviderVisitor)
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(from = "ProviderRaw")]
+pub struct Provider {
+    pub name: String,
+    pub vehicle_type: String,
+    pub subscription_info: Option<SubscriptionInfo>,
+    pub updated_at: String,
+    pub proxies: Vec<SelectableProxy>,
+}
+
+impl From<ProviderRaw> for Provider {
+    fn from(value: ProviderRaw) -> Self {
+        let ProviderRaw {
+            name,
+            vehicle_type,
+            subscription_info,
+            updated_at,
+            proxies,
+        } = value;
+
+        Self {
+            name,
+            vehicle_type,
+            subscription_info,
+            updated_at,
+            proxies: proxies
+                .into_iter()
+                .filter_map(|entry| match entry {
+                    ProxyEntryRaw::Group(_) => None,
+                    ProxyEntryRaw::Proxy(proxy_raw) => {
+                        Some(SelectableProxy::from_proxy_without_cache(&proxy_raw))
+                    }
+                })
+                .collect(),
+        }
+    }
 }

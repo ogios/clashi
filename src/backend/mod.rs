@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use data::{ProxyEntryRaw, ProxyGroupRaw, Root};
 
-pub mod data;
+mod data;
+pub use data::Provider;
 
 #[derive(Debug)]
 pub struct ProxyGroup {
@@ -88,6 +89,20 @@ impl SelectableProxy {
         } else {
             proxy.history.last().map(|entry| entry.delay)
         };
+
+        Self {
+            name,
+            udp,
+            proxy_type,
+            latency,
+        }
+    }
+
+    pub fn from_proxy_without_cache(proxy: &data::ProxyRaw) -> Self {
+        let name = proxy.name.clone();
+        let proxy_type = proxy.typ;
+        let udp = proxy.udp;
+        let latency = proxy.history.last().map(|entry| entry.delay);
 
         Self {
             name,

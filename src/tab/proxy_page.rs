@@ -38,7 +38,7 @@ impl ProxyPage {
         area: ratatui::layout::Rect,
         buf: &mut ratatui::buffer::Buffer,
         proxies: &[SelectableProxy],
-        selected: usize,
+        selected: Option<usize>,
     ) {
         let rows: Vec<Row> = proxies
             .iter()
@@ -50,7 +50,7 @@ impl ProxyPage {
                     p.latency.map_or("--".to_string(), |l| format!("{l}ms")),
                     p.udp.to_string(),
                 ]);
-                if i == selected {
+                if selected.is_some_and(|s| s == i) {
                     row.on_green().black()
                 } else {
                     row
@@ -102,7 +102,7 @@ impl ProxyPage {
         area: ratatui::layout::Rect,
         buf: &mut ratatui::buffer::Buffer,
         proxies: &[SelectableProxy],
-        selected: usize,
+        selected: Option<usize>,
     ) {
         if proxies.is_empty() {
             buf.set_string(

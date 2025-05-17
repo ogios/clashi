@@ -17,7 +17,7 @@ use strum_macros::{EnumIter, IntoStaticStr};
 use vertical_gauge::VerticalGauge;
 
 use crate::backend::{
-    ProxyGroup, SelectableProxy, data::Provider, get_proxy_groups, get_proxy_providers,
+    Provider, ProxyGroup, SelectableProxy, get_proxy_groups, get_proxy_providers,
     latency_test_group, latency_test_proxy, select_proxy,
 };
 
@@ -175,8 +175,7 @@ impl ProxyTabState {
                 let position = group
                     .proxies
                     .iter()
-                    .position(|p| group.now.as_ref().is_some_and(|n| n == &p.name))
-                    .unwrap_or(99999);
+                    .position(|p| group.now.as_ref().is_some_and(|n| n == &p.name));
                 self.proxy_page.draw(area, buf, &group.proxies, position);
             }
         }
@@ -361,12 +360,12 @@ impl ProviderTab {
                     });
             }
             Proxy => {
-                todo!()
-                // self.proxy_page.draw(
-                //     area,
-                //     buf,
-                //     &self.providers[self.provider_page.get_current_item()],
-                // );
+                self.proxy_page.draw(
+                    area,
+                    buf,
+                    &self.providers[self.provider_page.get_current_item()].proxies,
+                    None,
+                );
             }
         }
     }
