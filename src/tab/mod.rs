@@ -3,7 +3,6 @@ use std::sync::LazyLock;
 use card_page::CardPage;
 use chrono::{DateTime, TimeZone, Utc};
 use crossterm::event::KeyModifiers;
-use group_page::GroupPage;
 use humanize_duration::prelude::DurationExt;
 use ratatui::{
     buffer::Buffer,
@@ -22,9 +21,9 @@ use crate::backend::{
 
 mod card;
 mod card_page;
-mod group_page;
 mod provider_page;
 mod proxy_page;
+mod vertical_gauge;
 
 #[derive(Debug, IntoStaticStr, EnumIter, Eq, PartialEq, Clone, Copy)]
 pub enum Tab {
@@ -68,7 +67,7 @@ impl BoardWidget {
             current_tab: Tab::Group,
             group_tab_state: ProxyTabState {
                 groups: get_proxy_groups(),
-                group_page: GroupPage::new(4, 25),
+                group_page: CardPage::new(4, 25),
                 current_page: ProxyTabStatePage::Group,
                 proxy_page: proxy_page::ProxyPage::new(),
             },
@@ -311,11 +310,12 @@ impl ProviderTab {
                     });
             }
             Proxy => {
-                self.proxy_page.draw(
-                    area,
-                    buf,
-                    &self.providers[self.provider_page.get_current_item()],
-                );
+                todo!()
+                // self.proxy_page.draw(
+                //     area,
+                //     buf,
+                //     &self.providers[self.provider_page.get_current_item()],
+                // );
             }
         }
     }
@@ -349,13 +349,14 @@ impl ProviderTab {
                     }
                 }
                 Char('r') => {
-                    if let Some(p) = self
-                        .get_current_provider()
-                        .and_then(|group| self.get_current_proxy(group))
-                    {
-                        latency_test_proxy(&p.name);
-                        self.refresh();
-                    };
+                    todo!()
+                    // if let Some(p) = self
+                    //     .get_current_provider()
+                    //     .and_then(|group| self.get_current_proxy(group))
+                    // {
+                    //     latency_test_proxy(&p.name);
+                    //     self.refresh();
+                    // };
                 }
                 Home => todo!(),
                 End => todo!(),
