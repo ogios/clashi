@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::LazyLock};
 
 use data::{ProxyEntryRaw, ProxyGroupRaw, Root};
 
 mod data;
 pub use data::Provider;
+use reqwest::Url;
 
 #[derive(Debug)]
 pub struct ProxyGroup {
@@ -113,11 +114,11 @@ impl SelectableProxy {
     }
 }
 
+static BASE_URL: LazyLock<Url> = LazyLock::new(|| Url::parse("http://localhost:9090/").unwrap());
+
 pub fn get_proxy_groups() -> Vec<ProxyGroup> {
-    let response: data::Root = reqwest::blocking::get("http://localhost:9090/proxies")
-        .unwrap()
-        .json()
-        .unwrap();
+    let url = BASE_URL.join("proxies").unwrap();
+    let response: data::Root = reqwest::blocking::get(url).unwrap().json().unwrap();
 
     let mut raw_proxy_groups = vec![];
     let mut cache: HashMap<String, SelectableProxy> = HashMap::new();
@@ -169,10 +170,10 @@ pub fn get_proxy_groups() -> Vec<ProxyGroup> {
 }
 
 pub fn select_proxy(group: &str, proxy: &str) {
-    let url = format!("http://localhost:9090/proxies/{group}");
+    let url = BASE_URL.join(format!("proxies/{group}").as_str()).unwrap();
     let client = reqwest::blocking::Client::new();
     let _ = client
-        .put(&url)
+        .put(url)
         .header("Content-Type", "application/json")
         .body(format!(r#"{{"name": "{}"}}"#, proxy))
         .send()
@@ -184,30 +185,36 @@ pub fn select_proxy(group: &str, proxy: &str) {
 const DEFAULT_LATENCY_TEXT_URL: &str = "https://www.gstatic.com/generate_204";
 const TIMEOUT: u64 = 5000;
 pub fn latency_test_group(group: &str) {
-    let url = format!(
-        "http://localhost:9090/group/{group}/delay?url={DEFAULT_LATENCY_TEXT_URL}&timeout={TIMEOUT}"
-    );
-    let _ = reqwest::blocking::get(&url)
+    let mut url = BASE_URL
+        .join(format!("group/{group}/delay").as_str())
+        .unwrap();
+
+    url.query_pairs_mut()
+        .append_pair("url", DEFAULT_LATENCY_TEXT_URL)
+        .append_pair("timeout", &TIMEOUT.to_string());
+
+    let _ = reqwest::blocking::get(url)
         .unwrap()
         .error_for_status()
         .unwrap();
 }
 pub fn latency_test_proxy(proxy: &str) {
-    let url = format!(
-        "http://localhost:9090/proxies/{proxy}/delay?url={DEFAULT_LATENCY_TEXT_URL}&timeout={TIMEOUT}"
-    );
-    let _ = reqwest::blocking::get(&url)
+    let mut url = BASE_URL
+        .join(format!("proxies/{proxy}/delay").as_str())
+        .unwrap();
+    url.query_pairs_mut()
+        .append_pair("url", DEFAULT_LATENCY_TEXT_URL)
+        .append_pair("timeout", &TIMEOUT.to_string());
+
+    let _ = reqwest::blocking::get(url)
         .unwrap()
         .error_for_status()
         .unwrap();
 }
 
 pub fn get_proxy_providers() -> Vec<data::Provider> {
-    let response: data::ProviderRoot =
-        reqwest::blocking::get("http://localhost:9090/providers/proxies")
-            .unwrap()
-            .json()
-            .unwrap();
+    let url = BASE_URL.join("providers/proxies").unwrap();
+    let response: data::ProviderRoot = reqwest::blocking::get(url).unwrap().json().unwrap();
 
     let mut providers = response.providers.into_values().collect::<Vec<_>>();
     providers.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
