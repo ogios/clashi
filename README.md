@@ -13,6 +13,40 @@ This only works as a dashboard for clash backend:
 
 For Clash configuration operations, please checkout [clashtui](https://github.com/JohanChane/clashtui).
 
+## Keybinds
+
+Does not support keybind customization yet.
+
+### Tabs
+
+```
+tab/shift+tab: swith page between group and provider
+```
+
+### Group Page
+
+```
+hjkl/←↓↑→: select group
+space/enter: enter proxy page of the current selected group
+r: latency test for current selected group
+```
+
+### Provider Page
+
+```
+hjkl/←↓↑→: select provider
+space/enter: enter proxy page of the current selected provider
+f: update provider subscription
+```
+
+### Proxy Page
+
+```
+jk/↓↑: select proxy
+r: latency test for current selected proxy
+R: latency test for current group
+```
+
 ## TODO
 
 - secret
