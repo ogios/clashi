@@ -3,13 +3,23 @@
 > [!CAUTION]
 > WIP project
 
-![showcase](https://github.com/user-attachments/assets/ec04356a-c0e1-4264-b1c8-40bb574e3883)
-
 This only works as a dashboard for clash backend:
 
 - Check groups && proxies
 - Select proxy
 - Update provider
+
+## Showcase
+
+### Group
+
+![showcase-group](https://github.com/user-attachments/assets/09429241-8b4f-4bf3-b81e-f0d8f4230c08)
+
+### Provider
+
+![showcase-provider](https://github.com/user-attachments/assets/34b12dac-7e55-4614-8a49-09cf6cf911b2)
+
+
 
 For Clash configuration operations, please checkout [clashtui](https://github.com/JohanChane/clashtui).
 
