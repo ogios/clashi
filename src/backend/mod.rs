@@ -1,4 +1,7 @@
-use std::{collections::HashMap, sync::LazyLock};
+use std::{
+    collections::HashMap,
+    sync::{LazyLock, atomic::AtomicPtr},
+};
 
 use data::{ProxyEntryRaw, ProxyGroupRaw, Root};
 
@@ -116,7 +119,7 @@ impl SelectableProxy {
 
 static BASE_URL: LazyLock<Url> = LazyLock::new(|| Url::parse("http://localhost:9090/").unwrap());
 
-pub fn get_proxy_groups() -> Vec<ProxyGroup> {
+fn get_proxy_groups() -> Vec<ProxyGroup> {
     let url = BASE_URL.join("proxies").unwrap();
     let response: data::Root = reqwest::blocking::get(url).unwrap().json().unwrap();
 
@@ -212,7 +215,7 @@ pub fn latency_test_proxy(proxy: &str) {
         .unwrap();
 }
 
-pub fn get_proxy_providers() -> Vec<data::Provider> {
+fn get_proxy_providers() -> Vec<data::Provider> {
     let url = BASE_URL.join("providers/proxies").unwrap();
     let response: data::ProviderRoot = reqwest::blocking::get(url).unwrap().json().unwrap();
 
@@ -236,4 +239,37 @@ pub fn latency_test_provider(provider: &str) {
         .unwrap();
     let client = reqwest::blocking::Client::new();
     let _ = client.get(url).send().unwrap().error_for_status().unwrap();
+}
+
+use std::sync::atomic::Ordering::*;
+static GROUPS_DATA: AtomicPtr<Vec<ProxyGroup>> = AtomicPtr::new(std::ptr::null_mut());
+static PROVIDER_DATA: AtomicPtr<Vec<Provider>> = AtomicPtr::new(std::ptr::null_mut());
+
+pub fn refresh_data() {
+    let groups = get_proxy_groups();
+    let boxed = Box::new(groups);
+    let ptr = Box::into_raw(boxed);
+    GROUPS_DATA.store(ptr, Relaxed);
+
+    let providers = get_proxy_providers();
+    let boxed = Box::new(providers);
+    let ptr = Box::into_raw(boxed);
+    PROVIDER_DATA.store(ptr, Relaxed);
+}
+
+pub fn get_groups_data() -> &'static Vec<ProxyGroup> {
+    let ptr = GROUPS_DATA.load(Relaxed);
+    if ptr.is_null() {
+        refresh_data();
+    }
+
+    unsafe { &*GROUPS_DATA.load(Relaxed) }
+}
+
+pub fn get_providers_data() -> &'static Vec<Provider> {
+    let ptr = PROVIDER_DATA.load(Relaxed);
+    if ptr.is_null() {
+        refresh_data();
+    }
+    unsafe { &*PROVIDER_DATA.load(Relaxed) }
 }

@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, time::Instant};
 
 use crossterm::event::{self, Event, KeyEventKind};
 use ratatui::{

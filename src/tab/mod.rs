@@ -17,9 +17,8 @@ use strum_macros::{EnumIter, IntoStaticStr};
 use vertical_gauge::VerticalGauge;
 
 use crate::backend::{
-    Provider, ProxyGroup, SelectableProxy, get_proxy_groups, get_proxy_providers,
-    latency_test_group, latency_test_provider, latency_test_proxy, select_proxy,
-    update_proxy_provider,
+    Provider, ProxyGroup, SelectableProxy, get_groups_data, get_providers_data, latency_test_group,
+    latency_test_provider, latency_test_proxy, refresh_data, select_proxy, update_proxy_provider,
 };
 
 mod card;
@@ -69,13 +68,11 @@ impl BoardWidget {
         Self {
             current_tab: Tab::Group,
             group_tab_state: ProxyTabState {
-                groups: get_proxy_groups(),
                 group_page: CardPage::new(4, 25),
                 current_page: ProxyTabStatePage::Group,
                 proxy_page: proxy_page::ProxyPage::new(),
             },
             provider_tab_state: ProviderTab {
-                providers: get_proxy_providers(),
                 current_page: ProviderTabState::Providers,
                 provider_page: CardPage::new(6, 40),
                 proxy_page: proxy_page::ProxyPage::new(),
@@ -115,17 +112,13 @@ enum ProxyTabStatePage {
 
 #[derive(Debug)]
 pub struct ProxyTabState {
-    groups: Vec<ProxyGroup>,
     current_page: ProxyTabStatePage,
     group_page: CardPage,
     proxy_page: proxy_page::ProxyPage,
 }
 impl ProxyTabState {
     fn get_current_group(&self) -> Option<&ProxyGroup> {
-        self.groups.get(self.group_page.get_current_item())
-    }
-    fn refresh(&mut self) {
-        self.groups = get_proxy_groups();
+        get_groups_data().get(self.group_page.get_current_item())
     }
     fn get_current_proxy<'a>(&self, group: &'a ProxyGroup) -> Option<&'a SelectableProxy> {
         self.proxy_page
@@ -162,7 +155,7 @@ impl ProxyTabState {
     fn draw(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         match self.current_page {
             ProxyTabStatePage::Group => {
-                let data = &self.groups;
+                let data = get_groups_data();
                 self.group_page
                     .draw(area, buf, data.len(), |index, rect, buffer, state| {
                         let is_selected = index == state.get_current_item();
@@ -171,7 +164,7 @@ impl ProxyTabState {
                     });
             }
             ProxyTabStatePage::Proxy => {
-                let group = &self.groups[self.group_page.get_current_item()];
+                let group = &get_groups_data()[self.group_page.get_current_item()];
                 let position = group
                     .proxies
                     .iter()
@@ -193,7 +186,7 @@ impl ProxyTabState {
                 Char('r') => {
                     if let Some(g) = self.get_current_group() {
                         latency_test_group(&g.name);
-                        self.refresh();
+                        refresh_data();
                     }
                 }
                 _ => {}
@@ -206,7 +199,7 @@ impl ProxyTabState {
                         .and_then(|group| self.get_current_proxy(group).map(|proxy| (group, proxy)))
                     {
                         select_proxy(&g.name, &p.name);
-                        self.refresh();
+                        refresh_data();
                     };
                 }
                 Char('j') | Up => self.proxy_page.j(),
@@ -220,7 +213,7 @@ impl ProxyTabState {
                 Char('R') => {
                     if let Some(g) = self.get_current_group() {
                         latency_test_group(&g.name);
-                        self.refresh();
+                        refresh_data();
                     }
                 }
                 Char('r') => {
@@ -229,7 +222,7 @@ impl ProxyTabState {
                         .and_then(|group| self.get_current_proxy(group))
                     {
                         latency_test_proxy(&p.name);
-                        self.refresh();
+                        refresh_data();
                     };
                 }
                 _ => {}
@@ -245,17 +238,13 @@ enum ProviderTabState {
 }
 #[derive(Debug)]
 pub struct ProviderTab {
-    providers: Vec<Provider>,
     current_page: ProviderTabState,
     provider_page: CardPage,
     proxy_page: proxy_page::ProxyPage,
 }
 impl ProviderTab {
     fn get_current_provider(&self) -> Option<&Provider> {
-        self.providers.get(self.provider_page.get_current_item())
-    }
-    fn refresh(&mut self) {
-        self.providers = get_proxy_providers();
+        get_providers_data().get(self.provider_page.get_current_item())
     }
     fn get_current_proxy<'a>(&self, provider: &'a Provider) -> Option<&'a SelectableProxy> {
         self.proxy_page
@@ -356,7 +345,7 @@ impl ProviderTab {
         use ProviderTabState::*;
         match self.current_page {
             Providers => {
-                let data = &self.providers;
+                let data = get_providers_data();
                 self.provider_page
                     .draw(area, buf, data.len(), |index, rect, buffer, state| {
                         let is_selected = index == state.get_current_item();
@@ -368,7 +357,7 @@ impl ProviderTab {
                 self.proxy_page.draw(
                     area,
                     buf,
-                    &self.providers[self.provider_page.get_current_item()].proxies,
+                    &get_providers_data()[self.provider_page.get_current_item()].proxies,
                     None,
                 );
             }
@@ -388,7 +377,7 @@ impl ProviderTab {
                 Char('f') => {
                     if let Some(p) = self.get_current_provider() {
                         update_proxy_provider(&p.name);
-                        self.refresh();
+                        refresh_data();
                     }
                 }
                 _ => {}
@@ -400,7 +389,7 @@ impl ProviderTab {
                 Char('R') => {
                     if let Some(p) = self.get_current_provider() {
                         latency_test_provider(&p.name);
-                        self.refresh();
+                        refresh_data();
                     }
                 }
                 Char('r') => {
@@ -410,7 +399,7 @@ impl ProviderTab {
                         .and_then(|provider| self.get_current_proxy(provider))
                     {
                         latency_test_proxy(&p.name);
-                        self.refresh();
+                        refresh_data();
                     };
                 }
                 Home => todo!(),
