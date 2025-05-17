@@ -18,7 +18,8 @@ use vertical_gauge::VerticalGauge;
 
 use crate::backend::{
     Provider, ProxyGroup, SelectableProxy, get_proxy_groups, get_proxy_providers,
-    latency_test_group, latency_test_proxy, select_proxy,
+    latency_test_group, latency_test_provider, latency_test_proxy, select_proxy,
+    update_proxy_provider,
 };
 
 mod card;
@@ -256,6 +257,11 @@ impl ProviderTab {
     fn refresh(&mut self) {
         self.providers = get_proxy_providers();
     }
+    fn get_current_proxy<'a>(&self, provider: &'a Provider) -> Option<&'a SelectableProxy> {
+        self.proxy_page
+            .get_current_item()
+            .map(|index| &provider.proxies[index])
+    }
     fn draw_provider_item(area: Rect, buf: &mut Buffer, data: &Provider, is_selected: bool) {
         let mut block = Block::bordered()
             .title_top({
@@ -379,9 +385,9 @@ impl ProviderTab {
                 Char('j') | Down => self.provider_page.next_row(),
                 Char('k') | Left => self.provider_page.previous_row(),
                 Char('l') | Right => self.provider_page.next_item(),
-                Char('r') => {
-                    if let Some(g) = self.get_current_provider() {
-                        latency_test_group(&g.name);
+                Char('f') => {
+                    if let Some(p) = self.get_current_provider() {
+                        update_proxy_provider(&p.name);
                         self.refresh();
                     }
                 }
@@ -392,20 +398,20 @@ impl ProviderTab {
                 Char('j') | Up => self.proxy_page.j(),
                 Char('k') | Down => self.proxy_page.k(),
                 Char('R') => {
-                    if let Some(g) = self.get_current_provider() {
-                        latency_test_group(&g.name);
+                    if let Some(p) = self.get_current_provider() {
+                        latency_test_provider(&p.name);
                         self.refresh();
                     }
                 }
                 Char('r') => {
-                    todo!()
-                    // if let Some(p) = self
-                    //     .get_current_provider()
-                    //     .and_then(|group| self.get_current_proxy(group))
-                    // {
-                    //     latency_test_proxy(&p.name);
-                    //     self.refresh();
-                    // };
+                    self.proxy_page.get_current_item();
+                    if let Some(p) = self
+                        .get_current_provider()
+                        .and_then(|provider| self.get_current_proxy(provider))
+                    {
+                        latency_test_proxy(&p.name);
+                        self.refresh();
+                    };
                 }
                 Home => todo!(),
                 End => todo!(),

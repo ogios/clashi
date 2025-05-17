@@ -221,3 +221,19 @@ pub fn get_proxy_providers() -> Vec<data::Provider> {
 
     providers
 }
+
+pub fn update_proxy_provider(provider: &str) {
+    let url = BASE_URL
+        .join(format!("providers/proxies/{provider}").as_str())
+        .unwrap();
+    let client = reqwest::blocking::Client::new();
+    let _ = client.put(url).send().unwrap().error_for_status().unwrap();
+}
+
+pub fn latency_test_provider(provider: &str) {
+    let url = BASE_URL
+        .join(format!("providers/proxies/{provider}/healthcheck").as_str())
+        .unwrap();
+    let client = reqwest::blocking::Client::new();
+    let _ = client.get(url).send().unwrap().error_for_status().unwrap();
+}
