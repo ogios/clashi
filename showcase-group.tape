@@ -55,7 +55,8 @@
 #   Hide                            Hide the subsequent commands from the output
 #   Show                            Show the subsequent commands in the output
 
-Output showcase.gif
+Output showcase-group.mp4
+Output showcase-group.gif
 
 Require clashi
 
@@ -80,11 +81,11 @@ Enter Sleep 500ms
 
 Type@80ms "jjjjjjjjjjjjj" Sleep 500ms
 
-Space Sleep 1000ms
+Space Sleep 1s
 
-Type "R" Sleep 2000ms
+Type "R" Sleep 2s
 
-Type Esc
+Escape Sleep 2s
 
 Type "q" Sleep 500ms
 
