@@ -8,7 +8,7 @@ use humanize_duration::prelude::DurationExt;
 use ratatui::{
     buffer::Buffer,
     layout::{Layout, Rect},
-    style::Stylize,
+    style::{Color, Stylize},
     text::{Line, Text},
     widgets::{Block, Paragraph, Tabs, Widget, Wrap},
 };
@@ -142,7 +142,8 @@ impl ProxyTabState {
                 Line::from(data.latency.map_or("--".to_string(), |l| format!("{l}ms")))
                     .right_aligned()
                     .bold(),
-            );
+            )
+            .padding(ratatui::widgets::Padding::new(1, 1, 0, 0));
 
         if is_selected {
             block = block.green();
@@ -286,7 +287,8 @@ impl ProviderTab {
                 .human(humanize_duration::Truncate::Minute)
                 .to_string();
                 res.split_whitespace().collect::<Vec<_>>()[0].to_string()
-            }));
+            }))
+            .padding(ratatui::widgets::Padding::new(1, 1, 0, 0));
 
         if is_selected {
             block = block.green();
@@ -295,9 +297,10 @@ impl ProviderTab {
         let inner_area = block.inner(area);
         block.render(area, buf);
 
-        let [gauge_area, item_area] = Layout::horizontal([
-            ratatui::layout::Constraint::Length(1),
+        let [item_area, _, gauge_area] = Layout::horizontal([
             ratatui::layout::Constraint::Percentage(100),
+            ratatui::layout::Constraint::Length(1),
+            ratatui::layout::Constraint::Length(1),
         ])
         .areas(inner_area);
 
@@ -313,6 +316,7 @@ impl ProviderTab {
 
         VerticalGauge::default()
             .ratio(ratio)
+            .bg(Color::DarkGray)
             .render(gauge_area, buf);
 
         let lines = Text::from(vec![
