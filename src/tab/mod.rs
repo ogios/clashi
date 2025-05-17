@@ -1,18 +1,20 @@
 use std::sync::LazyLock;
 
+use bytesize::ByteSize;
 use card_page::CardPage;
 use chrono::{DateTime, TimeZone, Utc};
 use crossterm::event::KeyModifiers;
 use humanize_duration::prelude::DurationExt;
 use ratatui::{
     buffer::Buffer,
-    layout::Rect,
+    layout::{Layout, Rect},
     style::Stylize,
-    text::Line,
+    text::{Line, Text},
     widgets::{Block, Paragraph, Tabs, Widget, Wrap},
 };
 use strum::IntoEnumIterator;
 use strum_macros::{EnumIter, IntoStaticStr};
+use vertical_gauge::VerticalGauge;
 
 use crate::backend::{
     ProxyGroup, SelectableProxy, data::Provider, get_proxy_groups, get_proxy_providers,
@@ -59,6 +61,7 @@ impl Tab {
 pub struct BoardWidget {
     current_tab: Tab,
     group_tab_state: ProxyTabState,
+    provider_tab_state: ProviderTab,
 }
 
 impl BoardWidget {
@@ -69,6 +72,12 @@ impl BoardWidget {
                 groups: get_proxy_groups(),
                 group_page: CardPage::new(4, 25),
                 current_page: ProxyTabStatePage::Group,
+                proxy_page: proxy_page::ProxyPage::new(),
+            },
+            provider_tab_state: ProviderTab {
+                providers: get_proxy_providers(),
+                current_page: ProviderTabState::Providers,
+                provider_page: CardPage::new(6, 40),
                 proxy_page: proxy_page::ProxyPage::new(),
             },
         }
@@ -82,25 +91,17 @@ impl BoardWidget {
     }
     pub fn draw_tab(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         match self.current_tab {
-            Tab::Group => {
-                self.group_tab_state.draw(area, buf);
-            }
-            Tab::Provider => {}
+            Tab::Group => self.group_tab_state.draw(area, buf),
+            Tab::Provider => self.provider_tab_state.draw(area, buf),
         }
     }
     pub fn key_event(&mut self, key: crossterm::event::KeyEvent) {
         match key.code {
-            crossterm::event::KeyCode::Tab => {
-                self.current_tab.next();
-            }
-            crossterm::event::KeyCode::BackTab => {
-                self.current_tab.prev();
-            }
+            crossterm::event::KeyCode::Tab => self.current_tab.next(),
+            crossterm::event::KeyCode::BackTab => self.current_tab.prev(),
             _ => match self.current_tab {
-                Tab::Group => {
-                    self.group_tab_state.key_event(key);
-                }
-                Tab::Provider => todo!(),
+                Tab::Group => self.group_tab_state.key_event(key),
+                Tab::Provider => self.provider_tab_state.key_event(key),
             },
         }
     }
@@ -291,10 +292,51 @@ impl ProviderTab {
             block = block.green();
         }
 
-        Paragraph::new(data.name.clone().bold())
+        let inner_area = block.inner(area);
+        block.render(area, buf);
+
+        let [gauge_area, item_area] = Layout::horizontal([
+            ratatui::layout::Constraint::Length(1),
+            ratatui::layout::Constraint::Percentage(100),
+        ])
+        .areas(inner_area);
+
+        let ratio = data
+            .subscription_info
+            .as_ref()
+            .filter(|info| info.total.is_some())
+            .map(|info| {
+                (info.upload.unwrap_or(0) + info.download.unwrap_or(0)) as f64
+                    / info.total.unwrap() as f64
+            })
+            .unwrap_or(0.0);
+
+        VerticalGauge::default()
+            .ratio(ratio)
+            .render(gauge_area, buf);
+
+        let lines = Text::from(vec![
+            Line::from(data.name.clone().bold()),
+            Line::from(
+                data.subscription_info
+                    .as_ref()
+                    .filter(|info| info.total.is_some())
+                    .map(|info| {
+                        format!(
+                            "{} / {}",
+                            ByteSize::b(info.upload.unwrap_or(0) + info.download.unwrap_or(0))
+                                .display()
+                                .iec_short(),
+                            ByteSize::b(info.total.unwrap()).display().iec_short()
+                        )
+                    })
+                    .unwrap_or_default(),
+            ),
+        ]);
+
+        Paragraph::new(lines)
             .wrap(Wrap { trim: false })
-            .block(block)
-            .render(area, buf);
+            .render(item_area, buf);
     }
 
     fn draw(&mut self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {

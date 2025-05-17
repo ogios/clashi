@@ -2,6 +2,7 @@ use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Style, Styled},
+    text::{Line, Text},
     widgets::Widget,
 };
 
@@ -73,17 +74,8 @@ impl Widget for VerticalGauge {
             return;
         }
 
-        let start = area.top();
-        if start >= area.bottom() {
-            return;
-        }
-        let col = area.left();
-
         let chars = cal_chars(area.height as usize, self.ratio);
-
-        for (row, char) in chars.into_iter().enumerate() {
-            buf[(col, row as u16)].set_symbol(char);
-        }
+        Text::from(chars.into_iter().map(Line::from).collect::<Vec<Line>>()).render(area, buf);
     }
 }
 
