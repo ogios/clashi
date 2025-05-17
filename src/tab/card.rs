@@ -45,18 +45,18 @@ impl Card {
         // item start index
         let start_offset = state.row_offset * cards_in_a_row;
 
-        let render_rows: Vec<Rect> = Layout::vertical(
-            std::iter::repeat(ratatui::layout::Constraint::Length(self.height_of_each))
-                .take(rows as usize),
-        )
+        let render_rows: Vec<Rect> = Layout::vertical(std::iter::repeat_n(
+            ratatui::layout::Constraint::Length(self.height_of_each),
+            rows as usize,
+        ))
         .split(cards_area)
         .iter()
         .copied()
         .flat_map(|row_rect| {
-            Layout::horizontal(
-                std::iter::repeat(ratatui::layout::Constraint::Ratio(1, cards_in_a_row as u32))
-                    .take(cards_in_a_row),
-            )
+            Layout::horizontal(std::iter::repeat_n(
+                ratatui::layout::Constraint::Ratio(1, cards_in_a_row as u32),
+                cards_in_a_row,
+            ))
             .split(row_rect)
             .to_vec()
         })

@@ -23,7 +23,6 @@ use crate::backend::{
 
 mod card;
 mod card_page;
-mod provider_page;
 mod proxy_page;
 mod vertical_gauge;
 

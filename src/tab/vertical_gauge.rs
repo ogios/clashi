@@ -91,6 +91,7 @@ impl Styled for VerticalGauge {
     }
 }
 
+#[allow(unused_imports, dead_code)]
 mod tests {
     use std::fmt;
 
