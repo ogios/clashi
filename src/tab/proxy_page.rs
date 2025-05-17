@@ -4,7 +4,7 @@ use ratatui::{
     widgets::{Row, Scrollbar, ScrollbarState, StatefulWidget, Table, TableState},
 };
 
-use crate::backend::ProxyGroup;
+use crate::backend::SelectableProxy;
 
 #[derive(Debug)]
 pub struct ProxyPage {
@@ -37,19 +37,20 @@ impl ProxyPage {
         &mut self,
         area: ratatui::layout::Rect,
         buf: &mut ratatui::buffer::Buffer,
-        group: &ProxyGroup,
+        proxies: &[SelectableProxy],
+        selected: usize,
     ) {
-        let rows: Vec<Row> = group
-            .proxies
+        let rows: Vec<Row> = proxies
             .iter()
-            .map(|p| {
+            .enumerate()
+            .map(|(i, p)| {
                 let row = Row::new(vec![
                     p.name.clone(),
                     p.proxy_type.str().to_owned(),
                     p.latency.map_or("--".to_string(), |l| format!("{l}ms")),
                     p.udp.to_string(),
                 ]);
-                if group.now.as_ref().is_some_and(|now| now == &p.name) {
+                if i == selected {
                     row.on_green().black()
                 } else {
                     row
@@ -82,9 +83,9 @@ impl ProxyPage {
         &mut self,
         area: ratatui::layout::Rect,
         buf: &mut ratatui::buffer::Buffer,
-        group: &ProxyGroup,
+        proxies: &[SelectableProxy],
     ) {
-        self.scroll_state = self.scroll_state.content_length(group.proxies.len());
+        self.scroll_state = self.scroll_state.content_length(proxies.len());
         StatefulWidget::render(
             Scrollbar::default()
                 .thumb_style(Style::default().fg(ratatui::style::Color::Green))
@@ -100,9 +101,10 @@ impl ProxyPage {
         &mut self,
         area: ratatui::layout::Rect,
         buf: &mut ratatui::buffer::Buffer,
-        group: &ProxyGroup,
+        proxies: &[SelectableProxy],
+        selected: usize,
     ) {
-        if group.proxies.is_empty() {
+        if proxies.is_empty() {
             buf.set_string(
                 area.left(),
                 area.top(),
@@ -117,7 +119,7 @@ impl ProxyPage {
             ratatui::layout::Constraint::Length(1),
         ])
         .areas(area);
-        self.draw_table(table_area, buf, group);
-        self.draw_scrollbar(scrollbar_area, buf, group);
+        self.draw_table(table_area, buf, proxies, selected);
+        self.draw_scrollbar(scrollbar_area, buf, proxies);
     }
 }

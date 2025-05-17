@@ -171,8 +171,13 @@ impl ProxyTabState {
                     });
             }
             ProxyTabStatePage::Proxy => {
-                self.proxy_page
-                    .draw(area, buf, &self.groups[self.group_page.get_current_item()]);
+                let group = &self.groups[self.group_page.get_current_item()];
+                let position = group
+                    .proxies
+                    .iter()
+                    .position(|p| group.now.as_ref().is_some_and(|n| n == &p.name))
+                    .unwrap_or(99999);
+                self.proxy_page.draw(area, buf, &group.proxies, position);
             }
         }
     }
